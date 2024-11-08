@@ -1,4 +1,3 @@
-// HomeScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,6 +14,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const HomeScreen = () => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [speed, setSpeed] = useState(0); // State for speed
+  const [searchQuery, setSearchQuery] = useState(''); // State for search input
 
   useEffect(() => {
     (async () => {
@@ -24,16 +25,23 @@ const HomeScreen = () => {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location.coords);
+      // Start watching position to get real-time updates, including speed
+      await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 1 },
+        (newLocation) => {
+          setLocation(newLocation.coords);
+          setSpeed(newLocation.coords.speed ? newLocation.coords.speed * 3.6 : 0); // Convert from m/s to km/h
+        }
+      );
     })();
   }, []);
 
   const renderMarkers = () => {
+    if (!location) return null;
+
     return [
       { id: 1, lat: location.latitude + 0.001, lon: location.longitude + 0.001, type: 'shop' },
       { id: 2, lat: location.latitude - 0.001, lon: location.longitude - 0.001, type: 'parking' },
-      // Add more markers here as needed
     ].map((marker) => (
       <Marker
         key={marker.id}
@@ -47,8 +55,37 @@ const HomeScreen = () => {
     ));
   };
 
+  const handleSearch = async () => {
+    try {
+      const geocodedLocation = await Location.geocodeAsync(searchQuery);
+      if (geocodedLocation.length > 0) {
+        const { latitude, longitude } = geocodedLocation[0];
+        setLocation({ latitude, longitude });
+      } else {
+        alert("Location not found");
+      }
+    } catch (error) {
+      alert("Error fetching location. Please try again.");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.searchContainer}>
+        <Icon name="search-outline" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Where do you want to go?"
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearch} // Trigger search on submit
+        />
+        <TouchableOpacity style={styles.voiceIcon} onPress={handleSearch}>
+          <Icon name="mic-outline" size={20} color="#888" />
+        </TouchableOpacity>
+      </View>
+
       <MapView
         style={styles.map}
         region={{
@@ -61,23 +98,10 @@ const HomeScreen = () => {
       >
         {location && renderMarkers()}
       </MapView>
-      
-      {/* Speed and Direction Panel */}
-      <View style={styles.speedContainer}>
-        <Text style={styles.speedText}>7 km/h</Text>
-      </View>
 
-      {/* Search Box */}
-      <View style={styles.searchContainer}>
-        <Icon name="search-outline" size={20} color="#888" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Where do you want to go?"
-          placeholderTextColor="#888"
-        />
-        <TouchableOpacity style={styles.voiceIcon}>
-          <Icon name="mic-outline" size={20} color="#888" />
-        </TouchableOpacity>
+      {/* Real-Time Speed Display */}
+      <View style={styles.speedContainer}>
+        <Text style={styles.speedText}>{speed.toFixed(1)} km/h</Text>
       </View>
     </SafeAreaView>
   );
@@ -109,9 +133,10 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     position: 'absolute',
-    bottom: 60,
+    top: 80,
     left: 20,
     right: 20,
+    zIndex: 1,
     backgroundColor: '#fff',
     borderRadius: 20,
     flexDirection: 'row',
