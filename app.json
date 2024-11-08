@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "surprised-green-cashew",
+    "slug": "snack-41e3f428-37d6-4a79-9b13-54411607c8d4",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kaushik"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.shiit_code.snack41e3f42837d64a799b1354411607c8d4"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a6903655-8d31-4796-bdbf-a3ed60b7a69b"
+      }
+    }
+  }
+}
