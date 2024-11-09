@@ -8,12 +8,12 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace with your actual API key
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'; // Store securely
 
 const TravelScreen = () => {
   const [location, setLocation] = useState(null);
@@ -96,6 +96,7 @@ const TravelScreen = () => {
               longitude: location.longitude,
             }}
             title="Your Location"
+            pinColor="blue"
           />
           {selectedPlace && (
             <>
@@ -111,7 +112,7 @@ const TravelScreen = () => {
                 destination={{ latitude: selectedPlace.lat, longitude: selectedPlace.lon }}
                 apikey={GOOGLE_MAPS_API_KEY}
                 strokeWidth={4}
-                strokeColor="blue"
+                strokeColor="#4D79FF"
               />
             </>
           )}

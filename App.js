@@ -9,7 +9,8 @@ import SignupScreen from './components/Sign';
 import LoginScreen from './components/login';
 import HomeScreen from './components/HomeScreen';
 import CampaignPage from './components/campign';
-import TravelScreen from './components/TravelScreen'; // Import the new Travel screen
+import TravelScreen from './components/TravelScreen';
+import LogoutScreen from './components/Logout'; // Import the new Logout screen
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,6 +51,16 @@ const MainTabs = () => (
         tabBarLabel: 'Travel',
         tabBarIcon: ({ color, size }) => (
           <Icon name="airplane-outline" color={color} size={size} />
+        ),
+      }}
+    />
+    <Tab.Screen
+      name="Profile"
+      component={LogoutScreen} // Set the LogoutScreen as the Profile tab
+      options={{
+        tabBarLabel: 'Profile',
+        tabBarIcon: ({ color, size }) => (
+          <Icon name="person-outline" color={color} size={size} />
         ),
       }}
     />
