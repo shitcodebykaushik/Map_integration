@@ -27,8 +27,8 @@ const UserProfileScreen = () => {
           style={styles.avatar}
         />
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>John Doe</Text>
-          <Text style={styles.userEmail}>johndoe@example.com</Text>
+          <Text style={styles.userName}>Kaniahq</Text>
+          <Text style={styles.userEmail}>kanishq@example.com</Text>
         </View>
       </View>
 
