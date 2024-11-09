@@ -12,22 +12,54 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import MapView from 'react-native-maps';
+import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const HomeScreen = () => {
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [isChatVisible, setIsChatVisible] = useState(false);
-  const [chatStep, setChatStep] = useState(1); // Step to track conversation flow
+  const [chatStep, setChatStep] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
+  // Fetch the user's current location
   useEffect(() => {
-    // Start the conversation
-    setChatMessages([
-      { id: '0', text: 'Hello! Do you want to check the date and time?', sender: 'bot' },
-    ]);
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location.coords);
+    })();
   }, []);
 
+  // Render nearby markers
+  const renderMarkers = () => {
+    if (!location) return null;
+
+    const markers = [
+      { id: 1, latitude: location.latitude + 0.001, longitude: location.longitude + 0.001, type: 'shop' },
+      { id: 2, latitude: location.latitude - 0.001, longitude: location.longitude - 0.001, type: 'parking' },
+    ];
+
+    return markers.map(marker => (
+      <Marker
+        key={marker.id}
+        coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+      >
+        <View style={[styles.markerIcon, marker.type === 'shop' ? styles.shopMarker : styles.parkingMarker]}>
+          <Icon name={marker.type === 'shop' ? 'storefront-outline' : 'car-outline'} size={20} color="#fff" />
+        </View>
+      </Marker>
+    ));
+  };
+
+  // Chatbot functionality
   const handleSend = () => {
     if (!message.trim()) return;
 
@@ -66,19 +98,7 @@ const HomeScreen = () => {
         if (userResponse.toLowerCase() === 'yes') {
           botMessage = "Great! I'm glad the issue is resolved.";
         } else {
-          botMessage = "Your problem has been registered. Please call customer support at ";
-          const supportNumber = "6200174741";
-          setChatMessages((prevMessages) => [
-            ...prevMessages,
-            { id: Date.now().toString(), text: botMessage, sender: 'bot' },
-            {
-              id: (Date.now() + 1).toString(),
-              text: supportNumber,
-              sender: 'bot',
-              call: true, // Special flag to show the call button
-            },
-          ]);
-          return;
+          botMessage = "Your problem has been registered. Please call customer support at 6200174741.";
         }
         setChatStep(1); // Reset the chat flow
         break;
@@ -88,7 +108,6 @@ const HomeScreen = () => {
         setChatStep(1);
     }
 
-    // Append the bot's response to the chat messages
     setChatMessages((prevMessages) => [
       ...prevMessages,
       { id: Date.now().toString(), text: botMessage, sender: 'bot' },
@@ -108,22 +127,46 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Map View */}
       <MapView
         style={styles.map}
         region={{
-          latitude: 37.78825,
-          longitude: -122.4324,
+          latitude: location ? location.latitude : 37.78825,
+          longitude: location ? location.longitude : -122.4324,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
         showsUserLocation={true}
-      />
+      >
+        {location && renderMarkers()}
+      </MapView>
 
+      {/* Speed Panel */}
+      <View style={styles.speedContainer}>
+        <Text style={styles.speedText}>7 km/h</Text>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Icon name="search-outline" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Where do you want to go?"
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={styles.voiceIcon}>
+          <Icon name="mic-outline" size={20} color="#888" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Chatbot Icon */}
       <TouchableOpacity style={styles.chatbotIcon} onPress={() => setIsChatVisible(true)}>
         <Icon name="chatbubble-ellipses-outline" size={24} color="#4D79FF" />
       </TouchableOpacity>
 
-      {/* Centered Chat Modal */}
+      {/* Chat Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -131,10 +174,7 @@ const HomeScreen = () => {
         onRequestClose={() => setIsChatVisible(false)}
       >
         <View style={styles.modalBackground}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.chatContainer}
-          >
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.chatContainer}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setIsChatVisible(false)}>
               <Icon name="close" size={24} color="#4D79FF" />
             </TouchableOpacity>
@@ -167,9 +207,54 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { width: '100%', height: '100%' },
+  speedContainer: {
+    position: 'absolute',
+    top: 150,
+    left: 20,
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  speedText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  searchContainer: {
+    position: 'absolute',
+    bottom: 480,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  searchIcon: {
+    marginRight: 5,
+  },
+  voiceIcon: {
+    marginLeft: 10,
+  },
   chatbotIcon: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 120,
     right: 20,
     backgroundColor: '#fff',
     padding: 10,
@@ -206,7 +291,7 @@ const styles = StyleSheet.create({
   },
   userBubble: { backgroundColor: '#4D79FF', alignSelf: 'flex-end' },
   botBubble: { backgroundColor: '#e5e5ea', alignSelf: 'flex-start' },
-  chatText: { color: '#fff' },
+  chatText: { color: '000' },
   callButton: {
     marginLeft: 10,
     backgroundColor: '#4D79FF',
@@ -234,6 +319,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#4D79FF',
     padding: 10,
     borderRadius: 20,
+  },
+  markerIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shopMarker: {
+    backgroundColor: '#4D79FF',
+  },
+  parkingMarker: {
+    backgroundColor: '#FF6F61',
   },
 });
 

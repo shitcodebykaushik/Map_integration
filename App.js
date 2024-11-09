@@ -1,16 +1,17 @@
 // App.js
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { TouchableOpacity } from 'react-native';
 
 import SignupScreen from './components/Sign';
 import LoginScreen from './components/login';
 import HomeScreen from './components/HomeScreen';
 import CampaignPage from './components/campign';
 import TravelScreen from './components/TravelScreen';
-import LogoutScreen from './components/Logout'; // Import the new Logout screen
+import LogoutScreen from './components/Logout';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,8 +32,7 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
-// Main Tab Navigator
-const MainTabs = () => (
+const MainTabs = ({ toggleTheme, isDarkMode }) => (
   <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen
       name="HomeStack"
@@ -56,7 +56,7 @@ const MainTabs = () => (
     />
     <Tab.Screen
       name="Profile"
-      component={LogoutScreen} // Set the LogoutScreen as the Profile tab
+      component={LogoutScreen}
       options={{
         tabBarLabel: 'Profile',
         tabBarIcon: ({ color, size }) => (
@@ -64,18 +64,44 @@ const MainTabs = () => (
         ),
       }}
     />
+    <Tab.Screen
+      name="ThemeToggle"
+      component={HomeStack} // Use any existing component (e.g., HomeStack) since we are not navigating to it
+      options={{
+        tabBarLabel: 'Theme',
+        tabBarIcon: ({ color, size }) => (
+          <TouchableOpacity onPress={toggleTheme}>
+            <Icon 
+              name={isDarkMode ? "sunny-outline" : "moon-outline"} 
+              color={color} 
+              size={size} 
+            />
+          </TouchableOpacity>
+        ),
+      }}
+      listeners={({ navigation }) => ({
+        tabPress: e => {
+          e.preventDefault(); // Prevent navigation on tab press
+          toggleTheme(); // Call toggleTheme function instead
+        },
+      })}
+    />
   </Tab.Navigator>
 );
 
 const App = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Toggle dark mode state
+  const toggleTheme = () => setIsDarkMode(prevState => !prevState);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Authentication Stack */}
         <Stack.Screen name="Auth" component={AuthStack} />
-        
-        {/* Main Tab Navigator */}
-        <Stack.Screen name="HomeTab" component={MainTabs} />
+        <Stack.Screen name="HomeTab">
+          {() => <MainTabs toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
