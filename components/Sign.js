@@ -1,10 +1,32 @@
-// components/SignupScreen.js
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import axios from 'axios';
 const SignupScreen = () => {
   const navigation = useNavigation();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSignup = async () => {
+    try {
+      const response = await axios.post('https://map-jt0k.onrender.com/auth/signup', {
+        full_name: fullName,
+        email: email,
+        phone_number: phoneNumber,
+        password: password,
+      });
+
+      if (response.status === 201) {
+        Alert.alert('Success', 'Account created successfully');
+        navigation.navigate('Login'); // Navigate to Login screen
+      }
+    } catch (error) {
+      // Show error message if the signup fails
+      Alert.alert('Error', 'Failed to create account. Please try again.');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -17,6 +39,8 @@ const SignupScreen = () => {
           style={styles.input}
           placeholder="Full Name"
           placeholderTextColor="#888"
+          value={fullName}
+          onChangeText={setFullName}
         />
       </View>
 
@@ -26,6 +50,8 @@ const SignupScreen = () => {
           placeholder="Email"
           placeholderTextColor="#888"
           keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -35,6 +61,8 @@ const SignupScreen = () => {
           placeholder="Phone Number"
           placeholderTextColor="#888"
           keyboardType="phone-pad"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
         />
       </View>
 
@@ -44,16 +72,12 @@ const SignupScreen = () => {
           placeholder="Password"
           placeholderTextColor="#888"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
-      <TouchableOpacity
-        style={styles.signupButton}
-        onPress={() => navigation.reset({
-          index: 0,
-          routes: [{ name: 'HomeTab' }],
-        })}
-      >
+      <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
         <Text style={styles.signupButtonText}>Create Account</Text>
       </TouchableOpacity>
 

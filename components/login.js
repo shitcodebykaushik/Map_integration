@@ -1,10 +1,33 @@
-// components/LoginScreen.js
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post('https://map-jt0k.onrender.com/auth/login', {
+        email,
+        password,
+      });
+      
+      if (response.status === 200) {
+        // Navigate to the HomeTab or handle successful login
+        Alert.alert('Success', 'Login successful');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'HomeTab' }],
+        });
+      }
+    } catch (error) {
+      // Show error message
+      Alert.alert('Error', 'Invalid email or password');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -22,6 +45,8 @@ const LoginScreen = () => {
           placeholder="Email"
           placeholderTextColor="#888"
           keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -32,6 +57,8 @@ const LoginScreen = () => {
           placeholder="Password"
           placeholderTextColor="#888"
           secureTextEntry={true}
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
@@ -41,13 +68,7 @@ const LoginScreen = () => {
       </TouchableOpacity>
 
       {/* Login Button */}
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={() => navigation.reset({
-          index: 0,
-          routes: [{ name: 'HomeTab' }],
-        })}
-      >
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
 
@@ -134,8 +155,8 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#FF5252',
     fontSize: 14,
-    fontWeight: '600',
     marginLeft: 5,
+    fontWeight: '600',
   },
 });
 

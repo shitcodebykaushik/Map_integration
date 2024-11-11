@@ -25,7 +25,6 @@ const HomeScreen = () => {
   const [chatStep, setChatStep] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch the user's current location
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -38,7 +37,6 @@ const HomeScreen = () => {
     })();
   }, []);
 
-  // Render nearby markers
   const renderMarkers = () => {
     if (!location) return null;
 
@@ -59,7 +57,6 @@ const HomeScreen = () => {
     ));
   };
 
-  // Chatbot functionality
   const handleSend = () => {
     if (!message.trim()) return;
 
@@ -166,39 +163,45 @@ const HomeScreen = () => {
         <Icon name="chatbubble-ellipses-outline" size={24} color="#4D79FF" />
       </TouchableOpacity>
 
-      {/* Chat Modal */}
+      {/* Full-Screen Chat Modal */}
       <Modal
-        animationType="fade"
-        transparent={true}
+        animationType="slide"
+        transparent={false} // Makes the modal cover the entire screen
         visible={isChatVisible}
         onRequestClose={() => setIsChatVisible(false)}
       >
-        <View style={styles.modalBackground}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.chatContainer}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setIsChatVisible(false)}>
-              <Icon name="close" size={24} color="#4D79FF" />
+        <SafeAreaView style={styles.fullScreenChatContainer}>
+          {/* Chat Header with Close Button */}
+          <View style={styles.chatHeader}>
+            <Text style={styles.chatTitle}>Chatbot Assistant</Text>
+            <TouchableOpacity onPress={() => setIsChatVisible(false)}>
+              <Icon name="close-outline" size={24} color="#4D79FF" />
             </TouchableOpacity>
-            <FlatList
-              data={chatMessages}
-              renderItem={renderChatMessage}
-              keyExtractor={(item) => item.id}
-              style={styles.chatList}
-              contentContainerStyle={{ paddingBottom: 20 }}
+          </View>
+          
+          {/* Chat Messages */}
+          <FlatList
+            data={chatMessages}
+            renderItem={renderChatMessage}
+            keyExtractor={(item) => item.id}
+            style={styles.chatList}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+
+          {/* Input Field for Messages */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.chatInput}
+              placeholder="Type a message"
+              value={message}
+              onChangeText={setMessage}
+              onSubmitEditing={handleSend}
             />
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.chatInput}
-                placeholder="Type a message"
-                value={message}
-                onChangeText={setMessage}
-                onSubmitEditing={handleSend}
-              />
-              <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-                <Icon name="send" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+              <Icon name="send" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -264,24 +267,21 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  modalBackground: {
-    flex: 1,
-    justifyContent: 'center',
+  fullScreenChatContainer: { flex: 1, backgroundColor: '#fff' },
+  chatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
-  chatContainer: {
-    width: '90%',
-    maxHeight: '70%',
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 10,
+  chatTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4D79FF',
   },
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 10,
-  },
-  chatList: { flexGrow: 0, paddingHorizontal: 10 },
+  chatList: { flexGrow: 1, paddingHorizontal: 10 },
   chatBubble: {
     padding: 10,
     borderRadius: 10,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   userBubble: { backgroundColor: '#4D79FF', alignSelf: 'flex-end' },
   botBubble: { backgroundColor: '#e5e5ea', alignSelf: 'flex-start' },
-  chatText: { color: '000' },
+  chatText: { color: '#000' },
   callButton: {
     marginLeft: 10,
     backgroundColor: '#4D79FF',
@@ -303,7 +303,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#f1f1f1',
     borderTopWidth: 1,
     borderColor: '#ccc',
   },
@@ -319,19 +318,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4D79FF',
     padding: 10,
     borderRadius: 20,
-  },
-  markerIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  shopMarker: {
-    backgroundColor: '#4D79FF',
-  },
-  parkingMarker: {
-    backgroundColor: '#FF6F61',
   },
 });
 
