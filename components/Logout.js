@@ -1,20 +1,38 @@
 // components/UserProfileScreen.js
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, TextInput, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, TextInput, Button, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
 
-const UserProfileScreen = () => {
+const UserProfileScreen = ({ route }) => {
   const navigation = useNavigation();
+  const [user, setUser] = useState({ fullName: '', email: '' });
   const [isEditProfileVisible, setEditProfileVisible] = useState(false);
   const [isSavedPlacesVisible, setSavedPlacesVisible] = useState(false);
   const [isPaymentMethodsVisible, setPaymentMethodsVisible] = useState(false);
 
+  // Fetch user profile when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Assuming user ID is passed via route params after login
+        const userId = route.params?.userId;
+        const response = await axios.get(`https://map-jt0k.onrender.com/auth/user/${userId}`);
+        setUser({ fullName: response.data.full_name, email: response.data.email });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Error', 'Failed to load user data');
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   const handleLogout = () => {
-    // Navigate to the Authentication Stack and reset the stack history
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Auth', params: { screen: 'Signup' } }], // Navigate specifically to Signup screen
+      routes: [{ name: 'Auth', params: { screen: 'Signup' } }],
     });
   };
 
@@ -23,12 +41,12 @@ const UserProfileScreen = () => {
       {/* Profile Header */}
       <View style={styles.header}>
         <Image
-          source={{ uri: 'https://example.com/user-avatar.png' }} // Replace with actual user image
+          source={{ uri: 'https://example.com/user-avatar.png' }}
           style={styles.avatar}
         />
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Kaniahq</Text>
-          <Text style={styles.userEmail}>kanishq@example.com</Text>
+          <Text style={styles.userName}>{user.fullName}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
         </View>
       </View>
 
@@ -38,7 +56,7 @@ const UserProfileScreen = () => {
           <Icon name="person-outline" size={24} color="#4D79FF" style={styles.optionIcon} />
           <Text style={styles.optionText}>Edit Profile</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.option} onPress={() => setSavedPlacesVisible(true)}>
           <Icon name="bookmark-outline" size={24} color="#4D79FF" style={styles.optionIcon} />
           <Text style={styles.optionText}>Saved Places</Text>
@@ -47,19 +65,6 @@ const UserProfileScreen = () => {
         <TouchableOpacity style={styles.option} onPress={() => setPaymentMethodsVisible(true)}>
           <Icon name="card-outline" size={24} color="#4D79FF" style={styles.optionIcon} />
           <Text style={styles.optionText}>Payment Methods</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Settings Section */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.option}>
-          <Icon name="settings-outline" size={24} color="#4D79FF" style={styles.optionIcon} />
-          <Text style={styles.optionText}>Settings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.option}>
-          <Icon name="help-circle-outline" size={24} color="#4D79FF" style={styles.optionIcon} />
-          <Text style={styles.optionText}>Help & Support</Text>
         </TouchableOpacity>
       </View>
 
@@ -74,39 +79,16 @@ const UserProfileScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Profile</Text>
-            <TextInput placeholder="Full Name" style={styles.input} />
-            <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
+            <TextInput placeholder="Full Name" style={styles.input} value={user.fullName} onChangeText={(text) => setUser((prev) => ({ ...prev, fullName: text }))} />
+            <TextInput placeholder="Email" style={styles.input} value={user.email} onChangeText={(text) => setUser((prev) => ({ ...prev, email: text }))} keyboardType="email-address" />
             <Button title="Save" onPress={() => setEditProfileVisible(false)} />
             <Button title="Cancel" onPress={() => setEditProfileVisible(false)} color="red" />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Saved Places Modal */}
-      <Modal visible={isSavedPlacesVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Saved Places</Text>
-            <Text style={styles.modalText}>You currently have no saved places.</Text>
-            <Button title="Close" onPress={() => setSavedPlacesVisible(false)} />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Payment Methods Modal */}
-      <Modal visible={isPaymentMethodsVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Payment Methods</Text>
-            <Text style={styles.modalText}>No payment methods available.</Text>
-            <Button title="Close" onPress={() => setPaymentMethodsVisible(false)} />
           </View>
         </View>
       </Modal>
     </ScrollView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
